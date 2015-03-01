@@ -9,12 +9,16 @@ def ZMQP():
 
     context = zmq.Context()
     socket = context.socket(zmq.REP)
+    print("Binding to socket...")
     socket.bind("tcp://*:5555")
 
     while True:
-        message = socket.recv()
-        print "Recieved request: ", message
+        #CHECK DOCUMENTATION ABOUT VALUES
+        message = str(socket.recv(0,True,False))
+        print ("Received request: %s " % message)
         #parse message
+        message = message.replace("\x00", "")
+
         func,speed,time = map((int),message.split(","))
 
         #Control motors based on message
