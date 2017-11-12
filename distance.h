@@ -19,15 +19,11 @@
 /**This function initializes the ultrasonic sensor
  * @param integer number representing BBB output pin
  * @param integer number representing BBB input pin
- * @param gpio pointer to output pin
- * @param gpio pointer to input pin
  * @return void
 **/
 void sensor_init(int trigger, int echo);
 /**
  * Calulate distance to object in front of sensor
- * @param integer representing pin used by BBB for trigger
- * @param integer representing pin used by BBB for echo
  * @return Returns distance as a float
 **/
 double distance();
