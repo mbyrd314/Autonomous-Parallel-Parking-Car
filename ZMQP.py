@@ -2,7 +2,7 @@ import zmq
 import time
 
 from DC_Control import *
-def ZMQP:
+def ZMQP():
     port = "5555"
     #initialize motor object with PWM frequency of 1000
     motor = motor_init(1000)
@@ -13,9 +13,9 @@ def ZMQP:
 
     while True:
         message = socket.recv()
-        print "Recieved request: " message
+        print "Recieved request: ", message
         #parse message
-        func,speed,time = message.split(",")
+        func,speed,time = map((int),message.split(","))
 
         #Control motors based on message
         if (func == 0):
@@ -35,3 +35,4 @@ def ZMQP:
 
         #send acknowledge of motor motion
         socket.send("Movement complete %s" % port)
+ZMQP()
