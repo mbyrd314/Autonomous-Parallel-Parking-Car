@@ -9,7 +9,7 @@ def ZMQP():
 
     context = zmq.Context()
     socket = context.socket(zmq.REP)
-    socket.bind("tcp://*:%s" % port)
+    socket.bind("tcp://*:5555")
 
     while True:
         message = socket.recv()
