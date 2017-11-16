@@ -3,7 +3,7 @@ import time
 
 from DC_Control import *
 def ZMQP():
-    port = "5555"
+    port = "5555 "
     #initialize motor object with PWM frequency of 1000
     motor = motor_init(1000)
 
@@ -13,8 +13,8 @@ def ZMQP():
     socket.bind("tcp://*:5555")
 
     while True:
-        #CHECK DOCUMENTATION ABOUT VALUES
-        message = str(socket.recv(0,True,False))
+        message = socket.recv(0,True,False)
+        message = str(message)
         print ("Received request: %s " % message)
         #parse message
         message = message.replace("\x00", "")
