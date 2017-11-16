@@ -29,7 +29,8 @@ void sensor_init(int trigger, int echo, struct gpio_pins *IO){
 /**
  * Calulate distance to object in front of sensor
 **/
-double distance(struct gpio_pins *IO){
+double distance(void *p_gpio){
+    struct gpio_pins *IO = (struct gpio_pins *) p_gpio;
     struct timespec pulse_start;
     struct timespec pulse_end;
     double delta_sec;
