@@ -9,53 +9,56 @@
 /**
 This function initializes the ultrasonic sensor
 **/
-gpio* gpio_output,* gpio_input;
+struct gpio_pins{
+    gpio *gpio_output;
+    gpio *gpio_input;
+};
 
-void sensor_init(int trigger, int echo){
+void sensor_init(int trigger, int echo, struct gpio_pins *IO){
     printf("Initializing sensors please wait .... \n");
 
     //Request gpio pins
-    gpio_output = libsoc_gpio_request(trigger, LS_SHARED);
-    gpio_input = libsoc_gpio_request(echo, LS_SHARED);
+    IO->gpio_output = libsoc_gpio_request(trigger, LS_SHARED);
+    IO->gpio_input = libsoc_gpio_request(echo, LS_SHARED);
     //Set GPIO pins
-    libsoc_gpio_set_direction(gpio_output, OUTPUT);
-    libsoc_gpio_set_direction(gpio_input, INPUT);
+    libsoc_gpio_set_direction(IO->gpio_output, OUTPUT);
+    libsoc_gpio_set_direction(IO->gpio_input, INPUT);
 
-    
+
 }
 /**
  * Calulate distance to object in front of sensor
 **/
-double distance(){
+double distance(struct gpio_pins *IO){
     struct timespec pulse_start;
     struct timespec pulse_end;
     double delta_sec;
     double delta_nsec;
     double pulse_duration;
-    double dist;  
+    double dist;
     //Emit 10 usec pulse
 
-    int set = libsoc_gpio_set_level(gpio_output, LOW);
+    int set = libsoc_gpio_set_level(IO->gpio_output, LOW);
     usleep(10);
-    int set_in = libsoc_gpio_set_level(gpio_output, HIGH);
+    int set_in = libsoc_gpio_set_level(IO->gpio_output, HIGH);
 
     int i = 0;
-    int level = libsoc_gpio_get_level(gpio_input);
-    
+    int level = libsoc_gpio_get_level(IO->gpio_input);
+
     //Detect beginning and end of pulse
     printf("Level: %d " , level);
     while ((level == 1) && (i < 10000)){
-        level = libsoc_gpio_get_level(gpio_input);
+        level = libsoc_gpio_get_level(IO->gpio_input);
 	clock_gettime(CLOCK_REALTIME, &pulse_start);
     	i++;
     }
     clock_gettime(CLOCK_REALTIME, &pulse_start);
     while (level == 0){
-        level = libsoc_gpio_get_level(gpio_input);
+        level = libsoc_gpio_get_level(IO->gpio_input);
 	clock_gettime(CLOCK_REALTIME, &pulse_end);
     }
     clock_gettime(CLOCK_REALTIME, &pulse_end);
-   
+
     //Calculate time elapsed
     delta_sec = pulse_end.tv_sec - pulse_start.tv_sec;
     delta_nsec = pulse_end.tv_nsec - pulse_start.tv_nsec;
@@ -66,7 +69,7 @@ double distance(){
 
     dist = pulse_duration * 17150;
     dist = roundf(dist * 100) / 100;
-   
+
     return dist;
 
 }
@@ -103,10 +106,10 @@ main(){
 
     sensor_init(45, 44);//PIN NUMBER USED ON BBB and GPIO POINTERS
     printf("Initialization has completed. Sensing will now begin...\n");
-    
+
     while (1){
         dist = distance(gpio_output, gpio_input);
-        printf("Distance from sensor is %f \n" , dist);	
+        printf("Distance from sensor is %f \n" , dist);
         usleep(10000);
     }
 }
