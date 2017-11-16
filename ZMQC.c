@@ -1,13 +1,5 @@
-#include <zmq.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-//#include <zhelpers.h>
-//#include <buffer.h>
+#include "ZMQC.h"
 
-#define MSG_SIZE 12
-#define ACK_SIZE 22
 int main(){
     zmq_msg_t message;
     int err1 = zmq_msg_init_size(&message, MSG_SIZE);
