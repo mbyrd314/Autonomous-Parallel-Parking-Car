@@ -44,7 +44,7 @@ void stop(struct zmq_socket *p_socket){
     send_instr(message, p_socket);
 }
 
-int main(){
+/*int main(){
     struct zmq_socket zsocket;
     init_socket(&zsocket);
     forward(20,1,&zsocket);
@@ -58,4 +58,4 @@ int main(){
     right(20,1,&zsocket);
     left(20,1,&zsocket);
     back_left(20,1,&zsocket);
-}
+}*/
