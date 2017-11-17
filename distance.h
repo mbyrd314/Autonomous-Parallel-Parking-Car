@@ -21,7 +21,7 @@
  * @param integer number representing BBB input pin
  * @return void
 **/
-void sensor_init(int trigger, int echo, struct gpio_pins *IO);
+void sensor_init(struct gpio_pins *IO);
 /**
  * Calulate distance to object in front of sensor
  * @return Returns distance as a float

@@ -12,14 +12,16 @@ This function initializes the ultrasonic sensor
 struct gpio_pins{
     gpio *gpio_output;
     gpio *gpio_input;
+    int trigger;
+    int echo;
 };
 
-void sensor_init(int trigger, int echo, struct gpio_pins *IO){
+void sensor_init(struct gpio_pins *IO){
     printf("Initializing sensors please wait .... \n");
 
     //Request gpio pins
-    IO->gpio_output = libsoc_gpio_request(trigger, LS_SHARED);
-    IO->gpio_input = libsoc_gpio_request(echo, LS_SHARED);
+    IO->gpio_output = libsoc_gpio_request(IO->trigger, LS_SHARED);
+    IO->gpio_input = libsoc_gpio_request(IO->echo, LS_SHARED);
     //Set GPIO pins
     libsoc_gpio_set_direction(IO->gpio_output, OUTPUT);
     libsoc_gpio_set_direction(IO->gpio_input, INPUT);
