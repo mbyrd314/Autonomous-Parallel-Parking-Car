@@ -9,12 +9,6 @@
 /**
 This function initializes the ultrasonic sensor
 **/
-struct gpio_pins{
-    gpio *gpio_output;
-    gpio *gpio_input;
-    int trigger;
-    int echo;
-};
 
 void sensor_init(struct gpio_pins *IO){
     printf("Initializing sensors please wait .... \n");
@@ -31,8 +25,8 @@ void sensor_init(struct gpio_pins *IO){
 /**
  * Calulate distance to object in front of sensor
 **/
-double distance(void *p_gpio){
-    struct gpio_pins *IO = (struct gpio_pins *) p_gpio;
+double distance(struct gpio_pins *IO){
+    //struct gpio_pins *IO = (struct gpio_pins *) p_gpio;
     struct timespec pulse_start;
     struct timespec pulse_end;
     double delta_sec;
@@ -103,6 +97,7 @@ void wait(int nanosec){
     clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 
 }
+/*
 main(){
     double dist;
     printf("Main method is beginning\n");
@@ -116,3 +111,4 @@ main(){
         usleep(10000);
     }
 }
+*/

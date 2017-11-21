@@ -16,6 +16,16 @@
 #include <poll.h>
 #include <stdlib.h>
 
+struct gpio_pins{
+    gpio *gpio_output;
+    gpio *gpio_input;
+    int trigger;
+    int echo;
+    //an int indicating which ultrasonic sensor is being used and which variables to change in
+    //Parallel_park
+    int checker;
+};
+
 /**This function initializes the ultrasonic sensor
  * @param integer number representing BBB output pin
  * @param integer number representing BBB input pin
