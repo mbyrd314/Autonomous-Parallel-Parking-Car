@@ -5,7 +5,7 @@
  *  Author: Samvrutha Tumuluru, Michael Byrd
  *
  **/
-#include "distance.h"
+ #include "distance.h"
 /**
 This function initializes the ultrasonic sensor
 **/
@@ -22,9 +22,11 @@ void sensor_init(struct gpio_pins *IO){
 
 
 }
+
 /**
  * Calulate distance to object in front of sensor
 **/
+
 double distance(struct gpio_pins *IO){
     //struct gpio_pins *IO = (struct gpio_pins *) p_gpio;
     struct timespec pulse_start;
@@ -41,18 +43,18 @@ double distance(struct gpio_pins *IO){
 
     int i = 0;
     int level = libsoc_gpio_get_level(IO->gpio_input);
-
+    //perror("Input error: ");
     //Detect beginning and end of pulse
-    printf("Level: %d " , level);
+    //printf("Level: %d " , level);
     while ((level == 1) && (i < 10000)){
         level = libsoc_gpio_get_level(IO->gpio_input);
-	clock_gettime(CLOCK_REALTIME, &pulse_start);
+	    clock_gettime(CLOCK_REALTIME, &pulse_start);
     	i++;
     }
     clock_gettime(CLOCK_REALTIME, &pulse_start);
     while (level == 0){
         level = libsoc_gpio_get_level(IO->gpio_input);
-	clock_gettime(CLOCK_REALTIME, &pulse_end);
+	    clock_gettime(CLOCK_REALTIME, &pulse_end);
     }
     clock_gettime(CLOCK_REALTIME, &pulse_end);
 
@@ -62,7 +64,7 @@ double distance(struct gpio_pins *IO){
     pulse_duration = delta_sec + delta_nsec/pow(10, 9);
 
     //Calculate distance
-    printf("Pulse duration: %f \t Delta_sec: %f \t Delta_nsec %f\n", pulse_duration, delta_sec, delta_nsec);
+    //printf("Pulse duration: %f \t Delta_sec: %f \t Delta_nsec %f\n", pulse_duration, delta_sec, delta_nsec);
 
     dist = pulse_duration * 17150;
     dist = roundf(dist * 100) / 100;
@@ -74,7 +76,7 @@ double distance(struct gpio_pins *IO){
 /**
   *Sleeps for user specified number of nanoseconds.
 **/
-
+/*
 void wait(int nanosec){
     struct timespec ts;
     double curr_nsec;
@@ -97,18 +99,24 @@ void wait(int nanosec){
     clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 
 }
+*/
 /*
 main(){
     double dist;
+    struct gpio_pins IO_forward;
+    IO_forward.trigger = 45;
+    IO_forward.echo = 44;
+    IO_forward.checker = 1;
     printf("Main method is beginning\n");
 
-    sensor_init(45, 44);//PIN NUMBER USED ON BBB and GPIO POINTERS
+    sensor_init(&IO_forward);
     printf("Initialization has completed. Sensing will now begin...\n");
 
     while (1){
-        dist = distance(gpio_output, gpio_input);
+        dist = distance(&IO_forward);
         printf("Distance from sensor is %f \n" , dist);
-        usleep(10000);
+        usleep(100000);
     }
+
 }
 */

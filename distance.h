@@ -42,7 +42,7 @@ double distance(struct gpio_pins *IO);
  * @param integer number representing nanoseconds
  * @return no output
 **/
-void wait(int nanosec);
+//void wait(int nanosec);
 
 
 #endif /* DISTANCE_H_ */
