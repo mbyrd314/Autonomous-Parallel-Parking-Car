@@ -17,10 +17,15 @@ def ZMQP():
         message = str(message)
         print ("Received request: %s " % message)
         #parse message
+
         message = message.replace("\x00", "")
 
-        func,speed,time = map((int),message.split(","))
 
+        #func,speed,time,garbage = map((int),message.split(","))
+        func,speed,time,garbage = message.split(",")
+        func = int(func)
+        speed = int(speed)
+        time = int(time)
         #Control motors based on message
         if (func == 0):
             Forward(speed, motor, time)
