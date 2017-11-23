@@ -5,6 +5,8 @@
 pthread_mutex_t mutex_spot;
 pthread_mutex_t mutex_peds;
 pthread_mutex_t mutex_peds_back;
+pthread_mutex_t mutex_open_found;
+
 pthread_cond_t condvar;
 pthread_cond_t condvar_peds_back;
 pthread_cond_t condvar_spot;
@@ -105,8 +107,8 @@ void *dist_detect(void *zgpio){
     struct gpio_pins *p_gpio = (struct gpio_pins *) zgpio;
     double prev_state;
     double time_elapsed;
-    double time_start;
-    double time_stop;
+    struct timespec time_start;
+    struct timespec time_stop;//start timer here
 
     sensor_init(p_gpio);
 
@@ -146,16 +148,22 @@ void *dist_detect(void *zgpio){
         //writes to shared variable spot if distance has been greater than max distance for
         //specified length of time
         //Corresponds to frontright ultrasonic sensor
-        else if (p_gpio->checker == 3 && dist > MAX_DISTANCE){
+        else if (p_gpio->checker == 3){
             if(dist > MAX_DISTANCE){
-                //start timer here
+                clock_gettime(CLOCK_REALTIME, &time_start);
             }
             else{
-                //stop timer
+                clock_gettime(CLOCK_REALTIME, &time_stop);
             }
-            time_elapsed = time_start - time_stop;
+
+            delta_sec = time_stop.tv_sec - time_start.tv_sec;
+            delta_nsec = time_stop.tv_nsec - time_start.tv_nsec;
+            time_elapsed = delta_sec + delta_nsec/pow(10, 9);
+
             if(time_elapsed > OPEN_TIME){
+                pthread_mutex_lock(&mutex_open_found);
                 open_found = 1;
+                pthread_mutex_unlock(&mutex_open_found);
             }
 
         }
