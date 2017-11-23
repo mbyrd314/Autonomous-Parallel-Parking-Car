@@ -20,14 +20,14 @@ def motor_init(frequency):
 #Move car forward
 #@param duty cycle of motor to set speed
 #@param initialized motor object
-#@param amount of time to move in direction
+#@param amount of time to move in direction minimum time = .001
 def Forward(pwm, motor,t):
     motor.DCMotorMove(1, ClockWise, pwm)
     motor.DCMotorMove(2,ClockWise,pwm)
     motor.DCMotorMove(3,ClockWise,pwm)
     motor.DCMotorMove(4,ClockWise,pwm)
-    time.sleep(t)
-    Stop(motor)
+    #time.sleep(t)
+    #Stop(motor)
 #Move car backward
 #@param duty cycle of motor to set speed
 #@param initialized motor object
@@ -37,8 +37,8 @@ def Backward(pwm, motor,t):
     motor.DCMotorMove(2,CounterClockWise,pwm)
     motor.DCMotorMove(3,CounterClockWise,pwm)
     motor.DCMotorMove(4,CounterClockWise,pwm)
-    time.sleep(t)
-    Stop(motor)
+    #time.sleep(t)
+    #Stop(motor)
 #Move car backward and right
 #@param duty cycle of motor to set speed of the two faster wheels must be greater than 10
 #@param initialized motor object
@@ -48,8 +48,8 @@ def BackRight(pwm,motor,t):
     motor.DCMotorMove(4,CounterClockWise,pwm)
     motor.DCMotorMove(1,CounterClockWise, 10)
     motor.DCMotorMove(2,CounterClockWise, 10)
-    time.sleep(t)
-    Stop(motor)
+    #time.sleep(t)
+    #Stop(motor)
 #Move car forward and right
 #@param duty cycle of motor to set speed of the two faster wheels must be greater than 10
 #@param initialized motor object
@@ -59,8 +59,8 @@ def ForwardRight(pwm, motor,t):
     motor.DCMotorMove(4,ClockWise,pwm)
     motor.DCMotorMove(1,ClockWise, 10)
     motor.DCMotorMove(2,ClockWise, 10)
-    time.sleep(t)
-    Stop(motor)
+    #time.sleep(t)
+    #Stop(motor)
 #Move car backward and left
 #@param duty cycle of motor to set speed of the two faster wheels must be greater than 10
 #@param initialized motor object
@@ -70,8 +70,8 @@ def BackLeft(pwm,motor,t):
     motor.DCMotorMove(2,CounterClockWise,pwm)
     motor.DCMotorMove(3,CounterClockWise, 10)
     motor.DCMotorMove(4,CounterClockWise, 10)
-    time.sleep(t)
-    Stop(motor)
+    #time.sleep(t)
+    #Stop(motor)
 #Move car forward and left
 #@param duty cycle of motor to set speed of the two faster wheels must be greater than 10
 #@param initialized motor object
@@ -81,8 +81,8 @@ def ForwardLeft(pwm,motor,t):
     motor.DCMotorMove(2,ClockWise,pwm)
     motor.DCMotorMove(3,ClockWise, 10)
     motor.DCMotorMove(4,ClockWise, 10)
-    time.sleep(t)
-    Stop(motor)
+    #time.sleep(t)
+    #Stop(motor)
 #Stops all motors
 #@param initialized motor object
 def Stop(motor):
@@ -97,6 +97,7 @@ if __name__ == "__main__":
     motors = motor_init(1000)
 #    BackRight(30, motors, 1)
 #    BackLeft(25, motors, 2)
-#    Forward(30, motors, 1)
+    #Forward(20, motors, 1)
 #    Backward(20, motors, 1)
+    #sleep(2)
     Stop(motors)
