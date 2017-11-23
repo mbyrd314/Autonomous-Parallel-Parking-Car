@@ -7,7 +7,7 @@
     *@param duty cycle of motors to control speed must be between 0-100
     *@param zmq_socket struct pointer
 **/
-void forward(int speed, int t, struct zmq_socket *p_socket);
+void forward(int speed, double t, struct zmq_socket *p_socket);
 
 /**
     * Moves car backward for specified amount of time with set speed

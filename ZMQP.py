@@ -25,7 +25,7 @@ def ZMQP():
         func,speed,time,garbage = message.split(",")
         func = int(func)
         speed = int(speed)
-        time = int(time)
+        time = float(time)
         #Control motors based on message
         if (func == 0):
             Forward(speed, motor, time)
