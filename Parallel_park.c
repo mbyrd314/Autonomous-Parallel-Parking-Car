@@ -152,7 +152,7 @@ void *dist_detect(void *zgpio){
             if(dist > MAX_DISTANCE){
                 clock_gettime(CLOCK_REALTIME, &time_start);
             }
-            else{
+            else if( dist < MIN_DISTANCE_SIDES){
                 clock_gettime(CLOCK_REALTIME, &time_stop);
             }
 
