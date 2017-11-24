@@ -61,10 +61,12 @@ double time_remaining(struct timespec *time_start,struct timespec *time_end, dou
     double delta_nsec = time_end->tv_nsec - time_start->tv_nsec;
     double pulse_duration = delta_sec + delta_nsec/pow(10, 9);
     double remaining = expected- pulse_duration;
+    printf("TIME LEFT: %d", remaining);
     return remaining;
 }
 
 void set_timer(struct timespec *timeout_time, double expected, struct timespec *time_start){
+    clock_gettime(CLOCK_REALTIME, time_start);
     timeout_time->tv_sec = time_start->tv_sec + (int)expected;
     expected = (expected - (int)expected) * pow(10,9);
     timeout_time->tv_nsec = time_start->tv_nsec + expected;
@@ -94,54 +96,54 @@ void *p_park(void *p_socket){           //Hardcoded parallel park. Modify to dyn
 
     //User set inputs
     FN motion[PARKING_MOVES]={br,b,bl,f};
-    /*FN motion[PARKING_MOVES];
-    motion[0]= &back_right;
-    motion[1]= &backward;
-    motion[2]= &back_left;
-    motion[3] = &forward;*/
     double pause_time[PARKING_MOVES] = {2,1,1,1};
     int speed[PARKING_MOVES] = {30,30,30,20};
     int flags[PARKING_MOVES] = {0,0,0,1};
 
 
-
-    printf("Variable initialization complete \n");
-    while(i != PARKING_MOVES){
-        printf("In while loop\n");
+    while(i < PARKING_MOVES){
         pthread_mutex_lock(&mutex_peds_back);
         if (flags[i] == 0){
-            printf("In backwards if statement\n");
-            while(peds_back == 0){
-                printf("In backwards if statement\n");
-                clock_gettime(CLOCK_REALTIME, &time_start);
-                set_timer(&timeout_time, pause_time[i], &time_start);
-                motion[i](speed[i],pause_time[i],p_zsocket);
-                block = pthread_cond_timedwait(&condvar_peds_back, &mutex_peds_back, &timeout_time);
-                stop(p_zsocket);
-                clock_gettime(CLOCK_REALTIME, &time_end);
+            while(pause_time[i] >= 0){
+                if(peds_back == 0){
+                    set_timer(&timeout_time, pause_time[i], &time_start);
+                    motion[i](speed[i],pause_time[i],p_zsocket);
+                    pthread_cond_timedwait(&condvar_peds_back, &mutex_peds_back, &timeout_time);
+                    clock_gettime(CLOCK_REALTIME, &time_end);
+                }
+                else{
+                    stop(p_zsocket);
+                }
+                pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
             }
         }
         pthread_mutex_unlock(&mutex_peds_back);
 
         pthread_mutex_lock(&mutex_peds);
-        if(flags[i] == 1){
-            while(peds == 0){
-                clock_gettime(CLOCK_REALTIME, &time_start);
-                set_timer(&timeout_time, pause_time[i], &time_start);
-                (*motion[i])(speed[i],pause_time[i],p_zsocket);
-                block = pthread_cond_timedwait(&condvar, &mutex_peds, &timeout_time);
-                stop(p_zsocket);
-                clock_gettime(CLOCK_REALTIME, &time_end);
+        if (flags[i] == 1){
+            while(pause_time[i] >= 0){
+                if(peds == 0){
+                    set_timer(&timeout_time, pause_time[i], &time_start);
+                    motion[i](speed[i],pause_time[i],p_zsocket);
+                    pthread_cond_timedwait(&condvar, &mutex_peds, &timeout_time);
+                    clock_gettime(CLOCK_REALTIME, &time_end);
+                    stop(p_zsocket);
+                    pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
+                    printf("%d", i);
+                }
+                else{
+                    stop(p_zsocket);
+                }
+                pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
             }
         }
         pthread_mutex_unlock(&mutex_peds);
-        if(block == ETIMEDOUT){
+
             i++;
-        }
-        else{
-            pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
-        }
+
     }
+    printf("DONE ALL MOVES\n");
+    stop(p_zsocket);
     return NULL;
 }
 
