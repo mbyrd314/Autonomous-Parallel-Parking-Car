@@ -8,30 +8,30 @@ void *forward(int speed, double t, struct zmq_socket *p_socket){
 
 }
 
-void *backward(int speed, int t, struct zmq_socket *p_socket){
+void *backward(int speed, double t, struct zmq_socket *p_socket){
     char message[MSG_SIZE];
     sprintf(message,"1,%d,%.3f,", speed, t);
     send_instr(message, p_socket);
 }
-void *left(int speed, int t, struct zmq_socket *p_socket){
+void *left(int speed, double t, struct zmq_socket *p_socket){
     char message[MSG_SIZE];
     sprintf(message,"2,%d,%.3f,", speed, t);
     send_instr(message, p_socket);
 }
 
-void *back_left(int speed, int t, struct zmq_socket *p_socket){
+void *back_left(int speed, double t, struct zmq_socket *p_socket){
     char message[MSG_SIZE];
     sprintf(message,"3,%d,%.3f,", speed, t);
     send_instr(message, p_socket);
 }
 
-void *right(int speed, int t, struct zmq_socket *p_socket){
+void *right(int speed, double t, struct zmq_socket *p_socket){
     char message[MSG_SIZE];
     sprintf(message,"4,%d,%.3f,", speed, t);
     send_instr(message, p_socket);
 }
 
-void *back_right(int speed, int t, struct zmq_socket *p_socket){
+void *back_right(int speed, double t, struct zmq_socket *p_socket){
     char message[MSG_SIZE];
     sprintf(message,"5,%d,%.3f,", speed, t);
     send_instr(message, p_socket);

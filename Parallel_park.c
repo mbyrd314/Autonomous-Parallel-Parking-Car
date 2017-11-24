@@ -81,7 +81,7 @@ void *p_park(void *p_socket){           //Hardcoded parallel park. Modify to dyn
     FN br = &back_right;
     FN b = &backward;
     FN bl = &back_left;
-    FN f = &forward ;
+    FN f = &forward;
 
 
     struct timespec time_start, time_end, timeout_time;
@@ -112,20 +112,13 @@ void *p_park(void *p_socket){           //Hardcoded parallel park. Modify to dyn
         if (flags[i] == 0){
             printf("In backwards if statement\n");
             while(peds_back == 0){
-                printf("1\n");
+                printf("In backwards if statement\n");
                 clock_gettime(CLOCK_REALTIME, &time_start);
-                printf("2\n");
                 set_timer(&timeout_time, pause_time[i], &time_start);
-                printf("3\n");
                 motion[i](speed[i],pause_time[i],p_zsocket);
-                //backward(30,0,p_zsocket);
-                printf("4\n");
                 block = pthread_cond_timedwait(&condvar_peds_back, &mutex_peds_back, &timeout_time);
-                printf("5\n");
                 stop(p_zsocket);
-                printf("6\n");
                 clock_gettime(CLOCK_REALTIME, &time_end);
-                printf("7\n");
             }
         }
         pthread_mutex_unlock(&mutex_peds_back);
