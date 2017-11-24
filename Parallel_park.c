@@ -2,10 +2,13 @@
 //Car will move straight until open spot is detected
 //Determine size of spot
 //Initiate parallel parking protocol
+#include "Parallel_park.h"
+
 pthread_mutex_t mutex_spot;
 pthread_mutex_t mutex_peds;
 pthread_mutex_t mutex_peds_back;
 pthread_mutex_t mutex_open_found;
+pthread_mutex_t mutex_flag;
 
 pthread_cond_t condvar;
 pthread_cond_t condvar_peds_back;
@@ -19,29 +22,27 @@ int peds = 0;
 int peds_back = 0;
 int open_found = 0;
 
+
 //determine if open spot exists with which to park
 void *find_spot(void *p_socket){
     printf("Checking for parking spot \n");
+
+    //Lighting(blue) sets lights to blue while looking for spot
     struct zmq_socket *p_zsocket = (struct zmq_socket *) p_socket;
     int available;
-    int nsafe;
 
     pthread_mutex_lock(&mutex_spot);
     available = spot;
     pthread_mutex_unlock(&mutex_spot);
 
-    pthread_mutex_lock(&mutex_peds);
-    nsafe = peds;
-    pthread_mutex_unlock(&mutex_peds);
-
-
     //Available == 0 when parking spot has not yet been found
-    //nsafe == 0 when there is nothing around the car
+    //peds == 0 when there is nothing around the car
     while(available == 0){
         pthread_mutex_lock(&mutex_peds);
         if (peds == 1){
-            pthread_cond_wait(&condvar, &mutex_peds);
             stop(p_zsocket);
+            pthread_cond_wait(&condvar, &mutex_peds);
+
         }
         else{
             forward(20, 1, p_zsocket);
@@ -50,54 +51,104 @@ void *find_spot(void *p_socket){
         pthread_mutex_lock(&mutex_spot);
         available = spot;
         pthread_mutex_unlock(&mutex_spot);
-
-        printf("Available: %d\t Not Safe: %d\n",available,nsafe);
     }
     return (void *)1;
 }
 
+double time_remaining(struct timespec *time_start,struct timespec *time_end, double expected){
+
+    double delta_sec = time_end->tv_sec - time_start->tv_sec;
+    double delta_nsec = time_end->tv_nsec - time_start->tv_nsec;
+    double pulse_duration = delta_sec + delta_nsec/pow(10, 9);
+    double remaining = expected- pulse_duration;
+    return remaining;
+}
+
+void set_timer(struct timespec *timeout_time, double expected, struct timespec *time_start){
+    timeout_time->tv_sec = time_start->tv_sec + (int)expected;
+    expected = (expected - (int)expected) * pow(10,9);
+    timeout_time->tv_nsec = time_start->tv_nsec + expected;
+
+}
+
 void *p_park(void *p_socket){           //Hardcoded parallel park. Modify to dynamically park
     printf("Parking \n");
+
+    //Lighting(yellow) sets lights to yellow while parking
     struct zmq_socket *p_zsocket = (struct zmq_socket *) p_socket;
-    int nsafe_back;
-    int nsafe;
-    //checks ultrasonic sensor in back
-    pthread_mutex_lock(&mutex_peds_back);
-        nsafe_back = peds_back;
-    pthread_mutex_unlock(&mutex_peds_back);
-    //checks ultrasonic sensor in front
-    pthread_mutex_lock(&mutex_peds);
-        nsafe = peds;
-    pthread_mutex_unlock(&mutex_peds);
 
-    //while instructions are left in parking list buffer
-    /*
-    while(1){
-        pthread_mutex_lock(&mutex_peds);
-        if (peds == 1){
-            pthread_cond_wait(&condvar, &mutex_peds);
-            stop(p_zsocket);
-        }
-        else{
-            //READ NEXT INSTRUCTION FROM THE LIST
-            back_right(30, 2, p_zsocket);
-            back_left(30, 1, p_zsocket);
+    typedef void *(*FN)(int speed, double t, struct zmq_socket * xsocket);
+    FN br = &back_right;
+    FN b = &backward;
+    FN bl = &back_left;
+    FN f = &forward ;
 
-            forward(30, 1, p_zsocket);
-            backward(20, 1, p_zsocket);
-            stop(p_zsocket);
 
-        }
+    struct timespec time_start, time_end, timeout_time;
 
+    int i = 0;
+    int park_complete = 0;
+    double time_elapsed = 0;
+    int block;
+
+
+    //User set inputs
+    FN motion[PARKING_MOVES]={br,b,bl,f};
+    /*FN motion[PARKING_MOVES];
+    motion[0]= &back_right;
+    motion[1]= &backward;
+    motion[2]= &back_left;
+    motion[3] = &forward;*/
+    double pause_time[PARKING_MOVES] = {2,1,1,1};
+    int speed[PARKING_MOVES] = {30,30,30,20};
+    int flags[PARKING_MOVES] = {0,0,0,1};
+
+
+
+    printf("Variable initialization complete \n");
+    while(i != PARKING_MOVES){
+        printf("In while loop\n");
         pthread_mutex_lock(&mutex_peds_back);
-            nsafe_back = peds_back;
+        if (flags[i] == 0){
+            printf("In backwards if statement\n");
+            while(peds_back == 0){
+                printf("1\n");
+                clock_gettime(CLOCK_REALTIME, &time_start);
+                printf("2\n");
+                set_timer(&timeout_time, pause_time[i], &time_start);
+                printf("3\n");
+                motion[i](speed[i],pause_time[i],p_zsocket);
+                //backward(30,0,p_zsocket);
+                printf("4\n");
+                block = pthread_cond_timedwait(&condvar_peds_back, &mutex_peds_back, &timeout_time);
+                printf("5\n");
+                stop(p_zsocket);
+                printf("6\n");
+                clock_gettime(CLOCK_REALTIME, &time_end);
+                printf("7\n");
+            }
+        }
         pthread_mutex_unlock(&mutex_peds_back);
 
         pthread_mutex_lock(&mutex_peds);
-            nsafe = peds;
+        if(flags[i] == 1){
+            while(peds == 0){
+                clock_gettime(CLOCK_REALTIME, &time_start);
+                set_timer(&timeout_time, pause_time[i], &time_start);
+                (*motion[i])(speed[i],pause_time[i],p_zsocket);
+                block = pthread_cond_timedwait(&condvar, &mutex_peds, &timeout_time);
+                stop(p_zsocket);
+                clock_gettime(CLOCK_REALTIME, &time_end);
+            }
+        }
         pthread_mutex_unlock(&mutex_peds);
+        if(block == ETIMEDOUT){
+            i++;
+        }
+        else{
+            pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
+        }
     }
-    */
     return NULL;
 }
 
@@ -109,13 +160,15 @@ void *dist_detect(void *zgpio){
     double time_elapsed;
     struct timespec time_start;
     struct timespec time_stop;//start timer here
+    double delta_sec;
+    double delta_nsec;
 
     sensor_init(p_gpio);
 
     while(1){
         dist = distance(p_gpio);
         printf("dist: %f\n", dist);
-        //writes to shared variable if distance is unsafe
+        //writes to shared variable if distance is unsafe in front of car
         if(p_gpio->checker == 1){
             if(dist < MIN_DISTANCE){
                 pthread_mutex_lock(&mutex_peds);
@@ -130,7 +183,7 @@ void *dist_detect(void *zgpio){
                 pthread_mutex_unlock(&mutex_peds);
             }
         }
-        //writes to shared variable if distance is unsafe
+        //writes to shared variable if distance is unsafe behind car
         else if(p_gpio->checker == 2){
             if(dist < MIN_DISTANCE){
                 pthread_mutex_lock(&mutex_peds_back);
@@ -184,7 +237,9 @@ void *dist_detect(void *zgpio){
     return NULL;
 }
 
+void *User(void *p_socket){
 
+}
 
 int main(){
     //initialize sockets and io structs
@@ -201,9 +256,9 @@ int main(){
     IO_forward.echo = 44;
     IO_forward.checker = 1;
 
-    //IO_backward.trigger = 45;
-    //IO_backward.echo = 44;
-    //IO_backward.checker = 1;
+    IO_backward.trigger = 45;
+    IO_backward.echo = 44;
+    IO_backward.checker = 2;
 
     //IO_right_f.trigger = 45;
     //IO_right_f.echo = 44;
@@ -222,11 +277,15 @@ int main(){
     pthread_mutex_init(&mutex_spot, &attr);
     pthread_mutex_init(&mutex_peds, &attr);
     pthread_mutex_init(&mutex_peds_back, &attr);
+    pthread_mutex_init(&mutex_open_found, &attr);
+    pthread_mutex_init(&mutex_flag, &attr);
     pthread_mutexattr_destroy(&attr);
 
     pthread_condattr_t condattr1;
 	pthread_condattr_init(&condattr1);
 	pthread_cond_init(&condvar, &condattr1);
+    pthread_cond_init(&condvar_peds_back, &condattr1);
+    pthread_cond_init(&condvar_spot, &condattr1);
 
     //Create threads that check the forward and side sensors
     pthread_create(&uf, NULL, dist_detect, (void *) &IO_forward);
@@ -234,16 +293,17 @@ int main(){
     //pthread_create(&us2, NULL, dist_detect, (void *) &IO_right_b);
 
     //Create thread to drive forward until open spot is found
-    pthread_create(&f1, NULL, find_spot, (void *) &zsocket);
+    //pthread_create(&f1, NULL, find_spot, (void *) &zsocket);
 
     //Side sensors and find spot threads no longer needed during park
-    pthread_join(f1, &start_park);
+    //pthread_join(f1, &start_park);
     //pthread_join(us1,NULL);
     //pthread_join(us2,NULL);
-
+    pthread_create(&p1, NULL, p_park, (void *) &zsocket);
+    pthread_create(&ub, NULL, dist_detect, (void *) &IO_backward);
     /*if ((int)start_park == 1){
         pthread_create(&p1, NULL, p_park, (void *) &zsocket);
-        //pthread_create(&ub, NULL, dist_detect, (void *) &IO_backward);
+        pthread_create(&ub, NULL, dist_detect, (void *) &IO_backward);
     }*/
 
     pthread_join(p1,NULL);
