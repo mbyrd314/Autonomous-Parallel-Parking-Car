@@ -96,7 +96,7 @@ void *p_park(void *p_socket){           //Hardcoded parallel park. Modify to dyn
 
     //User set inputs
     FN motion[PARKING_MOVES]={f,b,bl,f};
-    double pause_time[PARKING_MOVES] = {2,1,1,1};
+    double pause_time[PARKING_MOVES] = {2,1,1,3};
     int speed[PARKING_MOVES] = {30,30,30,20};
     int flags[PARKING_MOVES] = {1,0,0,1};
 
@@ -104,42 +104,41 @@ void *p_park(void *p_socket){           //Hardcoded parallel park. Modify to dyn
     while(i < PARKING_MOVES){
         pthread_mutex_lock(&mutex_peds_back);
         if (flags[i] == 0){
-            while(pause_time[i] >= 0){
+            printf("%d", pause_time[i]);
+            while(pause_time[i] > 0){
                 if(peds_back == 0){
                     set_timer(&timeout_time, pause_time[i], &time_start);
                     motion[i](speed[i],pause_time[i],p_zsocket);
                     pthread_cond_timedwait(&condvar_peds_back, &mutex_peds_back, &timeout_time);
                     clock_gettime(CLOCK_REALTIME, &time_end);
+                    pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
                 }
                 else{
                     stop(p_zsocket);
                     pthread_cond_wait(&condvar_peds_back, &mutex_peds_back);
                 }
-                pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
             }
-            i++;
         }
         pthread_mutex_unlock(&mutex_peds_back);
 
         pthread_mutex_lock(&mutex_peds);
         if (flags[i] == 1){
-            while(pause_time[i] >= 0){
+            while(pause_time[i] > 0){
                 if(peds == 0){
                     set_timer(&timeout_time, pause_time[i], &time_start);
                     motion[i](speed[i],pause_time[i],p_zsocket);
                     pthread_cond_timedwait(&condvar, &mutex_peds, &timeout_time);
                     clock_gettime(CLOCK_REALTIME, &time_end);
+                    pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
                 }
                 else{
                     stop(p_zsocket);
                     pthread_cond_wait(&condvar, &mutex_peds);
                 }
-                pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
             }
-            i++;
         }
         pthread_mutex_unlock(&mutex_peds);
-
+        i++;
 
 
     }
@@ -162,7 +161,9 @@ void *dist_detect(void *zgpio){
     sensor_init(p_gpio);
 
     while(1){
+
         dist = distance(p_gpio);
+        usleep(100000);
         printf("dist: %f\n", dist);
         //writes to shared variable if distance is unsafe in front of car
         if(p_gpio->checker == 1){
