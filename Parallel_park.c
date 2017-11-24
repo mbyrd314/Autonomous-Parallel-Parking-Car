@@ -59,9 +59,9 @@ double time_remaining(struct timespec *time_start,struct timespec *time_end, dou
 
     double delta_sec = time_end->tv_sec - time_start->tv_sec;
     double delta_nsec = time_end->tv_nsec - time_start->tv_nsec;
-    double pulse_duration = delta_sec + delta_nsec/pow(10, 9);
+    double pulse_duration = delta_sec + (delta_nsec/pow(10, 9));
     double remaining = expected- pulse_duration;
-    printf("TIME LEFT: %d", remaining);
+    printf("TIME LEFT: %d \n", remaining);
     return remaining;
 }
 
@@ -95,10 +95,10 @@ void *p_park(void *p_socket){           //Hardcoded parallel park. Modify to dyn
 
 
     //User set inputs
-    FN motion[PARKING_MOVES]={br,b,bl,f};
+    FN motion[PARKING_MOVES]={f,b,bl,f};
     double pause_time[PARKING_MOVES] = {2,1,1,1};
     int speed[PARKING_MOVES] = {30,30,30,20};
-    int flags[PARKING_MOVES] = {0,0,0,1};
+    int flags[PARKING_MOVES] = {1,0,0,1};
 
 
     while(i < PARKING_MOVES){
@@ -113,9 +113,11 @@ void *p_park(void *p_socket){           //Hardcoded parallel park. Modify to dyn
                 }
                 else{
                     stop(p_zsocket);
+                    pthread_cond_wait(&condvar_peds_back, &mutex_peds_back);
                 }
                 pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
             }
+            i++;
         }
         pthread_mutex_unlock(&mutex_peds_back);
 
@@ -127,19 +129,18 @@ void *p_park(void *p_socket){           //Hardcoded parallel park. Modify to dyn
                     motion[i](speed[i],pause_time[i],p_zsocket);
                     pthread_cond_timedwait(&condvar, &mutex_peds, &timeout_time);
                     clock_gettime(CLOCK_REALTIME, &time_end);
-                    stop(p_zsocket);
-                    pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
-                    printf("%d", i);
                 }
                 else{
                     stop(p_zsocket);
+                    pthread_cond_wait(&condvar, &mutex_peds);
                 }
                 pause_time[i] = time_remaining(&time_start, &time_end, pause_time[i]);
             }
+            i++;
         }
         pthread_mutex_unlock(&mutex_peds);
 
-            i++;
+
 
     }
     printf("DONE ALL MOVES\n");
