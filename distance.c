@@ -48,13 +48,11 @@ double distance(struct gpio_pins *IO){
     //printf("Level: %d " , level);
     while ((level == 1) && (i < 10000)){
         level = libsoc_gpio_get_level(IO->gpio_input);
-	    clock_gettime(CLOCK_REALTIME, &pulse_start);
     	i++;
     }
     clock_gettime(CLOCK_REALTIME, &pulse_start);
     while (level == 0){
         level = libsoc_gpio_get_level(IO->gpio_input);
-	    clock_gettime(CLOCK_REALTIME, &pulse_end);
     }
     clock_gettime(CLOCK_REALTIME, &pulse_end);
 
@@ -100,8 +98,8 @@ void wait(int nanosec){
 
 }
 */
-/*
-main(){
+
+/*main(){
     double dist;
     struct gpio_pins IO_forward;
     IO_forward.trigger = 45;
@@ -118,5 +116,4 @@ main(){
         usleep(100000);
     }
 
-}
-*/
+}*/

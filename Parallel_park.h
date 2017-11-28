@@ -4,11 +4,12 @@
 #include "DC_Motor_Control.h"
 #include <pthread.h>
 #include "distance.h"
+#include <signal.h>
 
 #define MIN_DISTANCE 20
 #define MIN_DISTANCE_SIDES 10
 #define MAX_DISTANCE 50
-#define OPEN_TIME 6
+#define OPEN_TIME 1
 #define PARKING_MOVES 4
 
 //Car will drive forward until open spot is found
