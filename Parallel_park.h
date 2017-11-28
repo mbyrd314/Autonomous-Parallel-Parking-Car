@@ -7,9 +7,9 @@
 #include <signal.h>
 
 #define MIN_DISTANCE 20
-#define MIN_DISTANCE_SIDES 10
-#define MAX_DISTANCE 50
-#define OPEN_TIME 1
+#define MIN_DISTANCE_SIDES 8
+#define MAX_DISTANCE 40
+#define OPEN_TIME 1.5
 #define PARKING_MOVES 4
 
 //Car will drive forward until open spot is found

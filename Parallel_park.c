@@ -152,18 +152,24 @@ void *dist_detect(void *zgpio){
     printf("Beginning distance detection protocol \n");
     double dist;
     struct gpio_pins *p_gpio = (struct gpio_pins *) zgpio;
-    double prev_state;
-    double time_elapsed;
+    double prev_state = 0;
+    double time_elapsed = 0;
     struct timespec time_start;
     struct timespec time_stop;//start timer here
     double delta_sec;
     double delta_nsec;
+    int k= 0;
 
     sensor_init(p_gpio);
 
     while(1){
         pthread_mutex_lock(&mutex_distance);
         dist = distance(p_gpio);
+
+        if (dist < 1) {
+            dist = prev_state;
+        }
+
         pthread_mutex_unlock(&mutex_distance);
         usleep(100000);
         printf("dist: %f\n sensor: %d\n", dist, p_gpio->checker);
@@ -201,8 +207,9 @@ void *dist_detect(void *zgpio){
         //specified length of time
         //Corresponds to frontright ultrasonic sensor
         else if (p_gpio->checker == 3){
-            if(dist > MAX_DISTANCE){
+            if(dist > MAX_DISTANCE && k == 0){
                 clock_gettime(CLOCK_REALTIME, &time_start);
+                k = 1;
             }
             else if( dist < MIN_DISTANCE_SIDES){
                 clock_gettime(CLOCK_REALTIME, &time_stop);
@@ -212,17 +219,23 @@ void *dist_detect(void *zgpio){
             delta_nsec = time_stop.tv_nsec - time_start.tv_nsec;
             time_elapsed = delta_sec + delta_nsec/pow(10, 9);
 
+            printf("TIME ELAPSED: %f\n\n\n\n", time_elapsed);
             if(time_elapsed > OPEN_TIME){
                 pthread_mutex_lock(&mutex_open_found);
                 open_found = 1;
                 pthread_mutex_unlock(&mutex_open_found);
+            }
+            else{
+                k = 0;
             }
         }
         //Causes car to stop when distance changes from greater than Max Distance
         //to less than max distance
         //Corresponds to backright ultrasonic sensor.
         else if(p_gpio->checker == 4){
+
             if (prev_state > MAX_DISTANCE && dist < MIN_DISTANCE_SIDES && open_found == 1){
+
                 pthread_mutex_lock(&mutex_spot);
                 spot = 1;
                 pthread_cond_broadcast(&condvar_spot);
@@ -264,13 +277,13 @@ int main(){
     IO_backward.echo = 44;
     IO_backward.checker = 2;
 
-    IO_right_f.trigger = 66;
-    IO_right_f.echo = 67;
-    IO_right_f.checker = 3;
+    IO_right_b.trigger = 66;
+    IO_right_b.echo = 67;
+    IO_right_b.checker = 3;
 
-    IO_right_b.trigger = 69;
-    IO_right_b.echo = 68;
-    IO_right_b.checker = 4;
+    IO_right_f.trigger = 69;
+    IO_right_f.echo = 68;
+    IO_right_f.checker = 4;
 
     //initialize socket
     init_socket(&zsocket);
@@ -307,15 +320,24 @@ int main(){
     pthread_create(&us1, &a_attr, dist_detect, (void *) &IO_right_f);
     pthread_create(&us2, &a_attr, dist_detect, (void *) &IO_right_b);
     pthread_attr_destroy(&a_attr);
+
+/*
+    pthread_join(uf,NULL);
+    pthread_join(us1,NULL);
+    pthread_join(us2,NULL);
+    */
     //Create thread to drive forward until open spot is found
     pthread_create(&f1, NULL, find_spot, (void *) &zsocket);
 
     pthread_join(f1, &start_park);
 
     //Once spot is found stop side sensors and begin parking protocol
+
     if ((int)start_park == 1){
         pthread_cancel(us1);
         pthread_cancel(us2);
+        printf("Beginning Parking Protocol Now");
+        usleep(3000000);
         pthread_create(&p1, NULL, p_park, (void *) &zsocket);
         pthread_create(&ub, NULL, dist_detect, (void *) &IO_backward);
     }
