@@ -8,12 +8,12 @@ pthread_mutex_t mutex_spot;
 pthread_mutex_t mutex_peds;
 pthread_mutex_t mutex_peds_back;
 pthread_mutex_t mutex_open_found;
-pthread_mutex_t mutex_flag;
 pthread_mutex_t mutex_distance;
 
 pthread_cond_t condvar;
 pthread_cond_t condvar_peds_back;
 pthread_cond_t condvar_spot;
+pthread_cond_t condvar_open_found;
 
 //Shared variables representing if there is an open
 //parking spot and if there is anything blocking
@@ -156,21 +156,24 @@ void *dist_detect(void *zgpio){
     double time_elapsed = 0;
     struct timespec time_start;
     struct timespec time_stop;//start timer here
+    clock_gettime(CLOCK_REALTIME, &time_start);
+    clock_gettime(CLOCK_REALTIME, &time_stop);
     double delta_sec;
     double delta_nsec;
     int k= 0;
 
     sensor_init(p_gpio);
+    printf("Initialization complete");
 
     while(1){
-        pthread_mutex_lock(&mutex_distance);
+        //pthread_mutex_lock(&mutex_distance);
         dist = distance(p_gpio);
 
         if (dist < 1) {
             dist = prev_state;
         }
 
-        pthread_mutex_unlock(&mutex_distance);
+        //pthread_mutex_unlock(&mutex_distance);
         usleep(100000);
         printf("dist: %f\n sensor: %d\n", dist, p_gpio->checker);
         //writes to shared variable if distance is unsafe in front of car
@@ -211,45 +214,59 @@ void *dist_detect(void *zgpio){
                 clock_gettime(CLOCK_REALTIME, &time_start);
                 k = 1;
             }
-            else if( dist < MIN_DISTANCE_SIDES){
+            else if( dist < MIN_DISTANCE_SIDES && k == 1){
                 clock_gettime(CLOCK_REALTIME, &time_stop);
+                k = 0;
+
+                delta_sec = time_stop.tv_sec - time_start.tv_sec;
+                delta_nsec = time_stop.tv_nsec - time_start.tv_nsec;
+                time_elapsed = delta_sec + delta_nsec/pow(10, 9);
             }
 
-            delta_sec = time_stop.tv_sec - time_start.tv_sec;
-            delta_nsec = time_stop.tv_nsec - time_start.tv_nsec;
-            time_elapsed = delta_sec + delta_nsec/pow(10, 9);
-
-            printf("TIME ELAPSED: %f\n\n\n\n", time_elapsed);
-            if(time_elapsed > OPEN_TIME){
+            printf("TIME ELAPSED: %f \t k: %d\n\n\n\n", time_elapsed, k );
+            if(time_elapsed >= OPEN_TIME){
                 pthread_mutex_lock(&mutex_open_found);
                 open_found = 1;
+                pthread_cond_broadcast(&condvar_open_found);
                 pthread_mutex_unlock(&mutex_open_found);
+                return NULL;
             }
-            else{
-                k = 0;
-            }
+
         }
         //Causes car to stop when distance changes from greater than Max Distance
         //to less than max distance
         //Corresponds to backright ultrasonic sensor.
         else if(p_gpio->checker == 4){
-
-            if (prev_state > MAX_DISTANCE && dist < MIN_DISTANCE_SIDES && open_found == 1){
-
+            pthread_mutex_lock(&mutex_open_found);
+            while(open_found == 0){
+                //printf("Waiting\n");
+                pthread_cond_wait(&condvar_open_found, &mutex_open_found);
+            }
+            printf("OPEN WAS FOUND!!!!!!!!!!!!!!!!!!!!");
+            pthread_mutex_unlock(&mutex_open_found);
+            if (dist < MIN_DISTANCE_SIDES){
                 pthread_mutex_lock(&mutex_spot);
                 spot = 1;
+                printf("SPOT IS NOW 1");
                 pthread_cond_broadcast(&condvar_spot);
                 pthread_mutex_unlock(&mutex_spot);
-
             }
-            prev_state = dist;
-
         }
+        prev_state = dist;
+
     }
     return NULL;
 }
 
 void *User(void *p_socket){
+    int BLT_client[2];
+    init_BLT_sock(BLT_client);
+    char message[1024];
+    while(1){
+        BLT_Recv(BLT_client[1], message);
+        send_instr(message, p_socket);
+    }
+    BLT_end(BLT_client);
 
 }
 
@@ -269,22 +286,22 @@ int main(){
 
 
     //Pin initialization of ultrasonic sensors
-    IO_forward.trigger = 45;
-    IO_forward.echo = 44;
+    IO_forward.trigger = 66;
+    IO_forward.echo = 67;
     IO_forward.checker = 1;
 
-    IO_backward.trigger = 45;
-    IO_backward.echo = 44;
+    IO_backward.trigger = 27;
+    IO_backward.echo = 65;
     IO_backward.checker = 2;
 
-    IO_right_b.trigger = 66;
-    IO_right_b.echo = 67;
-    IO_right_b.checker = 3;
+//SOMETHING WRONG WITH HARDWARE FOR THIS ONE
+    IO_right_b.trigger = 69;
+    IO_right_b.echo = 68;
+    IO_right_b.checker = 4;
 
-    IO_right_f.trigger = 69;
-    IO_right_f.echo = 68;
-    IO_right_f.checker = 4;
-
+    IO_right_f.trigger = 47;
+    IO_right_f.echo = 46;
+    IO_right_f.checker = 3;
     //initialize socket
     init_socket(&zsocket);
 
@@ -292,42 +309,58 @@ int main(){
     pthread_t f1, uf, ub, us1, us2, p1;
     pthread_attr_t a_attr;
     struct sched_param schedule_paramA;
-
     pthread_attr_init(&a_attr);
     pthread_attr_setinheritsched(&a_attr, PTHREAD_EXPLICIT_SCHED);
     pthread_attr_setschedpolicy(&a_attr, SCHED_RR);
     pthread_attr_setschedparam(&a_attr, &schedule_paramA);
 
+    pthread_attr_t user_attr;
+    struct sched_param schedule_user;
+    pthread_attr_init(&user_attr);
+    pthread_attr_setinheritsched(&user_attr, PTHREAD_EXPLICIT_SCHED);
+    pthread_attr_setschedpolicy(&user_attr, SCHED_FIFO);
+    schedule_user.sched_priority = 50;
+    pthread_attr_setschedparam(&user_attr, &schedule_user);
+
+
+
     //Create mutexes and conditional variables
     pthread_mutexattr_t attr;
+		// This solves a known problem with locking and unlocking a fast, nonrecursive
+		// mutex too often
+		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
     pthread_mutex_init(&mutex_spot, &attr);
     pthread_mutex_init(&mutex_peds, &attr);
     pthread_mutex_init(&mutex_peds_back, &attr);
     pthread_mutex_init(&mutex_open_found, &attr);
-    pthread_mutex_init(&mutex_flag, &attr);
     pthread_mutex_init(&mutex_distance, &attr);
     pthread_mutexattr_destroy(&attr);
 
     //Create conditional variable attributes
     pthread_condattr_t condattr1;
-	pthread_condattr_init(&condattr1);
-	pthread_cond_init(&condvar, &condattr1);
+		pthread_condattr_init(&condattr1);
+		pthread_cond_init(&condvar, &condattr1);
     pthread_cond_init(&condvar_peds_back, &condattr1);
     pthread_cond_init(&condvar_spot, &condattr1);
+		pthread_cond_init(&condvar_open_found, &condattr1);
+
+    //pthread_create(&us1, &a_attr, dist_detect, (void *) &IO_right_f);
+    //pthread_create(&us2, &a_attr, dist_detect, (void *) &IO_right_f);
+    //pthread_attr_destroy(&a_attr);
+    //pthread_join(us1,NULL);
+    //pthread_join(us2,NULL);
+
 
     //Create threads that check the forward and side sensors
     pthread_create(&uf, &a_attr, dist_detect, (void *) &IO_forward);
     pthread_create(&us1, &a_attr, dist_detect, (void *) &IO_right_f);
     pthread_create(&us2, &a_attr, dist_detect, (void *) &IO_right_b);
-    pthread_attr_destroy(&a_attr);
+    //pthread_attr_destroy(&a_attr);
+		
+		printf("After joining threads\n");
 
-/*
-    pthread_join(uf,NULL);
-    pthread_join(us1,NULL);
-    pthread_join(us2,NULL);
-    */
     //Create thread to drive forward until open spot is found
-    pthread_create(&f1, NULL, find_spot, (void *) &zsocket);
+    pthread_create(&f1, &a_attr, find_spot, (void *) &zsocket);
 
     pthread_join(f1, &start_park);
 
