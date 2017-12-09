@@ -5,7 +5,7 @@ pthread_mutex_t mutex_peds;
 pthread_mutex_t mutex_peds_back;
 pthread_mutex_t mutex_open_found;
 pthread_mutex_t mutex_distance;
-pthread_mutex_t mutex_user_move;
+
 
 pthread_cond_t condvar;
 pthread_cond_t condvar_peds_back;
@@ -390,7 +390,6 @@ int main(){
     pthread_mutex_init(&mutex_peds_back, &attr);
     pthread_mutex_init(&mutex_open_found, &attr);
     pthread_mutex_init(&mutex_distance, &attr);
-    pthread_mutex_init(&mutex_user_move, &attr);
     pthread_mutexattr_destroy(&attr);
 
     //Create conditional variable attributes
