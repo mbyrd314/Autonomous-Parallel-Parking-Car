@@ -1,6 +1,10 @@
 #include "DC_Motor_Control.h"
 
+<<<<<<< HEAD
+// Sends a message to move the car forward at the indicated speed and for the indicated time
+=======
 
+>>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
 void *forward(int speed, double t, struct zmq_socket *p_socket){
     char message[MSG_SIZE];
     sprintf(message,"0,%d,%.3f,", speed, t);

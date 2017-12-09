@@ -7,6 +7,13 @@
 #include <errno.h>
 #define MSG_SIZE 12
 
+<<<<<<< HEAD
+/**
+ * Initializes a bluetooth rfcomm socket and binds it to port 22
+ * @param BLT_client - An int array to store the client and server file descriptors
+**/
+=======
+>>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
 void init_BLT_sock(int *BLT_client){
     struct sockaddr_rc loc_addr = { 0 }, rem_addr = { 0 };
     char buf[1024] = { 0 };
@@ -35,15 +42,39 @@ void init_BLT_sock(int *BLT_client){
     fprintf(stderr, "accepted connection from %s\n", buf);
     memset(buf, 0, sizeof(buf));
 
+<<<<<<< HEAD
+		// Store the socket and client in the array so that other functions can use them
+=======
+>>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
     BLT_client[0]= s;
     BLT_client[1] = client;
 
 }
+<<<<<<< HEAD
+
+/**
+ * Closes the bluetooth socket and client
+ * @param BLT_client - An int array storing the file descriptors for the socket and client
+**/
+=======
+>>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
 void BLT_end(int *BLT_client){
     close(BLT_client[1]);
     close(BLT_client[0]);
 
 }
+<<<<<<< HEAD
+
+/**
+ * Receives a message over the bluetooth connection
+ * @param client - A file descriptor for a bluetooth rfcomm socket
+ * @param message - A string to store the received message
+**/	
+	
+		
+// Receives a message over the 
+=======
+>>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
 void BLT_Recv(int client, char *message){
 
     // read data from the client
@@ -53,6 +84,8 @@ void BLT_Recv(int client, char *message){
     }
 */
 }
+<<<<<<< HEAD
+=======
 
 int main(){
     int BLT_client[2];
@@ -69,3 +102,4 @@ int main(){
     BLT_end(BLT_client);
     return 0;
 }
+>>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
