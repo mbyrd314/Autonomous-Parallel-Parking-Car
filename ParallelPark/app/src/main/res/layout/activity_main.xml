@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="parallel.park.MainActivity">
+
+    <Button
+        android:id="@+id/buttonDiscoveryStart"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/discovery_start" />
+
+    <Button
+        android:id="@+id/buttonDiscoveryCancel"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/discovery_cancel"
+        app:layout_constraintTop_toBottomOf="@id/buttonDiscoveryStart" />
+
+    <TextView
+        android:id="@+id/tvBtName"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="3dp"
+        android:text="@string/label_bt_name"
+        app:layout_constraintTop_toBottomOf="@id/buttonDiscoveryCancel" />
+
+    <TextView
+        android:id="@+id/tvBtAddress"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="3dp"
+        android:text="@string/label_bt_address"
+        app:layout_constraintTop_toBottomOf="@id/tvBtName" />
+
+    <TextView
+        android:id="@+id/tvBtState"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:padding="3dp"
+        android:text="@string/label_bt_state_unknown"
+        app:layout_constraintBottom_toTopOf="@+id/lvBtDevice"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvBtAddress"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <ListView
+        android:id="@+id/lvBtDevice"
+        android:layout_width="match_parent"
+        android:layout_height="420dp"
+        android:layout_marginTop="80dp"
+        android:background="#dddddd"
+        android:dividerHeight="5dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonDiscoveryCancel"
+        app:layout_constraintVertical_bias="0.0" />
+</android.support.constraint.ConstraintLayout>
