@@ -412,7 +412,6 @@ int main(){
     pthread_cancel(ub);
     pthread_cancel(uf);
 
-
     //Phase II: Search for parking spot
     pthread_create(&uf, &a_attr, dist_detect, (void *) &IO_forward);
     pthread_create(&us1, &a_attr, dist_detect, (void *) &IO_right_f);

@@ -26,42 +26,30 @@ void init_socket(struct zmq_socket *p_socket){
 **/
 void send_instr(char *instruction, struct zmq_socket *p_socket){
 
-<<<<<<< HEAD
-		// This initializes the message and acknowledge ZMQ message data structures
-		// They are allocated MSG_SIZE and ACK_SIZE bytes respectively
+
+	// This initializes the message and acknowledge ZMQ message data structures
+	// They are allocated MSG_SIZE and ACK_SIZE bytes respectively
     zmq_msg_init_size(&(p_socket->message), MSG_SIZE);
     zmq_msg_init_size(&(p_socket->ack), ACK_SIZE);
 
-		// Allocating a static array to receive the acknowledgement
+	// Allocating a static array to receive the acknowledgement
     char confirm[ACK_SIZE];
-		// Copying the instruction to the ZMQ message data structure
+	// Copying the instruction to the ZMQ message data structure
     memcpy(zmq_msg_data(&(p_socket->message)), instruction, MSG_SIZE);
-		// Sending the message using the ZMQ socket connected to the motor control Python server
-=======
-    zmq_msg_init_size(&(p_socket->message), MSG_SIZE);
-    zmq_msg_init_size(&(p_socket->ack), ACK_SIZE);
+	// Sending the message using the ZMQ socket connected to the motor control Python server
 
-    char confirm[ACK_SIZE];
-    memcpy(zmq_msg_data(&(p_socket->message)), instruction, MSG_SIZE);
->>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
     int err4 = zmq_send ((p_socket->requester),&(p_socket->message),0);
     if(err4 == -1){
         perror("Send error: ");
     }
 
-<<<<<<< HEAD
-		// Receiving the reply from the motor control server
-=======
->>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
+	// Receiving the reply from the motor control server
     int err5 = zmq_recv ((p_socket->requester),&(p_socket->ack),0);
     if(err5 == -1){
         perror("Recv error: ");
     }
 
-<<<<<<< HEAD
-		// Copying the reply from the ZMQ acknowledge data structure to the array confirm
-=======
->>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
+	// Copying the reply from the ZMQ acknowledge data structure to the array confirm
     memcpy (confirm ,zmq_msg_data (&(p_socket->ack)), ACK_SIZE);
     printf("Confirmation: %s\n", confirm);
 }
