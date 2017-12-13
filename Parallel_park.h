@@ -7,17 +7,12 @@
 #include <signal.h>
 
 #define MIN_DISTANCE 20
-<<<<<<< HEAD
 #define MIN_DISTANCE_SIDES 10
-=======
-#define MIN_DISTANCE_SIDES 8
->>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
 #define MAX_DISTANCE 40
 #define OPEN_TIME 1.5
 #define PARKING_MOVES 4
 
 //Car will drive forward until open spot is found
-<<<<<<< HEAD
 /**
  * Drives forward and repeatedly checks the distance sensed by both side ultrasonic sensors. If OPEN_TIME
  * seconds pass between when the front sensor detects a distance farther than MIN_DISTANCE_SIDES
@@ -58,31 +53,17 @@ void *User(void *p_socket);
 /**
  * Overrides user control if the commanded instruction would cause the car to collide with
  * something in front of it
- * @param p_socket - This is a void pointer to a zmq_socket struct. It is needed to send 
+ * @param p_socket - This is a void pointer to a zmq_socket struct. It is needed to send
  * instructions to the car.
 **/
-void *User_Override(void *p_socket){
-	
+void *User_Override(void *p_socket);
+
 /**
  * Overrides user control if the commanded instruction would cause the car to collide with
  * something behind it
- * @param p_socket - This is a void pointer to a zmq_socket struct. It is needed to send 
+ * @param p_socket - This is a void pointer to a zmq_socket struct. It is needed to send
  * instructions to the car.
-**/	
-void *User_Override2(void *p_socket){
+**/
+void *User_Override2(void *p_socket);
 
-=======
-void *find_spot(void *p_socket);
-
-//Once open spot is found parking protocol will commence
-void *p_park(void *p_socket);
-
-//detects distance of objects from sensor.Depending on checker
-//int changes various shared variables
-void *dist_detect(void *zgpio);
-
-//recieves user input via bluetooth and passes it
-void *User(void *p_socket);
-
->>>>>>> 8886df0b96ecb8f11d6e39ca52627fc30126b4dc
 #endif /*Parallel_Park_H_*/
